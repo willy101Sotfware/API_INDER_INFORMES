@@ -39,7 +39,7 @@ namespace API_INDER_INFORMES.Controllers
             {
                 // 1. Obtener transacciones de la fecha especificada
                 var transacciones = await _dashboardContext.Transactions
-                    .Where(t => t.DATE_CREATED.Date == fecha.Date)
+                  .Where(t => t.DATE_CREATED.Date == fecha.Date && t.INCOME_AMOUNT != 0)
                     .Select(t => new
                     {
                         ID = t.ID,
@@ -175,7 +175,7 @@ namespace API_INDER_INFORMES.Controllers
             {
                 // 1. Obtener transacciones de la fecha especificada
                 var transacciones = await _dashboardContext.Transactions
-                    .Where(t => t.DATE_CREATED.Date == fecha.Date)
+                    .Where(t => t.DATE_CREATED.Date == fecha.Date && t.INCOME_AMOUNT != 0)
                     .Select(t => new
                     {
                         ID = t.ID,
