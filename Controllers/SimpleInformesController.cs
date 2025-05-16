@@ -37,9 +37,15 @@ namespace API_INDER_INFORMES.Controllers
         {
             try
             {
-                // 1. Obtener transacciones de la fecha especificada
+                // 1. Obtener transacciones de la fecha especificada con estado Aprobada
+                // Primero, obtener el ID del estado Aprobada
+                var estadoAprobada = await _dashboardContext.StateTransactions
+                    .FirstOrDefaultAsync(s => s.STATE == "Aprobada");
+                
+                int idEstadoAprobada = estadoAprobada?.ID ?? 0;
+                
                 var transacciones = await _dashboardContext.Transactions
-                 .Where(t => t.DATE_CREATED.Date == fecha.Date)
+                 .Where(t => t.DATE_CREATED.Date == fecha.Date && t.ID_STATE_TRANSACTION == idEstadoAprobada)
                     .Select(t => new
                     {
                         ID = t.ID,
@@ -176,9 +182,15 @@ namespace API_INDER_INFORMES.Controllers
         {
             try
             {
-                // 1. Obtener transacciones de la fecha especificada
+                // 1. Obtener transacciones de la fecha especificada con estado Aprobada
+                // Primero, obtener el ID del estado Aprobada
+                var estadoAprobada = await _dashboardContext.StateTransactions
+                    .FirstOrDefaultAsync(s => s.STATE == "Aprobada");
+                
+                int idEstadoAprobada = estadoAprobada?.ID ?? 0;
+                
                 var transacciones = await _dashboardContext.Transactions
-                   .Where(t => t.DATE_CREATED.Date == fecha.Date)
+                   .Where(t => t.DATE_CREATED.Date == fecha.Date && t.ID_STATE_TRANSACTION == idEstadoAprobada)
                     .Select(t => new
                     {
                         ID = t.ID,

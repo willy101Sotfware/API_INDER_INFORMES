@@ -12,6 +12,7 @@ namespace API_INDER_INFORMES.Data
 
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<TransactionDetail> TransactionDetails { get; set; }
+        public DbSet<StateTransaction> StateTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -20,6 +21,7 @@ namespace API_INDER_INFORMES.Data
             // Configurar el esquema para las tablas
             modelBuilder.Entity<Transaction>().ToTable("Transactions", "business");
             modelBuilder.Entity<TransactionDetail>().ToTable("TransactionsDetail", "business");
+            modelBuilder.Entity<StateTransaction>().ToTable("StateTransaction", "masters");
         }
     }
 }
