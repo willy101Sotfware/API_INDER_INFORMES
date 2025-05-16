@@ -3,9 +3,16 @@ using Microsoft.EntityFrameworkCore;
 using API_INDER_INFORMES.Data;
 using API_INDER_INFORMES.Models;
 using API_INDER_INFORMES.Services;
+using System.Text;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.Drawing;
+using System.IO;
+using System.Globalization;
+using System.Linq;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System;
 
 namespace API_INDER_INFORMES.Controllers
 {
@@ -169,8 +176,9 @@ namespace API_INDER_INFORMES.Controllers
                 {
                     bool primeraFila = true;
                     
-                    // Si hay transacciones para este documento, mostrar una fila por cada transacción
-                    if (registro.Transacciones != null && registro.Transacciones.Count > 0)
+                    // Solo procesar registros que tienen transacciones asociadas
+                    if (registro.Transacciones != null && registro.Transacciones.Count > 0 && 
+                        !string.IsNullOrEmpty(registro.NumeroDocumento))
                     {
                         foreach (var transaccion in registro.Transacciones)
                         {
@@ -244,27 +252,7 @@ namespace API_INDER_INFORMES.Controllers
                             row++;
                         }
                     }
-                    else
-                    {
-                        // Si no hay transacciones, mostrar solo una fila con los datos personales
-                        worksheet.Cells[row, 1].Value = registro.Nombres;
-                        worksheet.Cells[row, 2].Value = registro.Apellidos;
-                        worksheet.Cells[row, 3].Value = registro.Correo;
-                        worksheet.Cells[row, 4].Value = registro.Direccion;
-                        worksheet.Cells[row, 5].Value = registro.FechaNacimiento;
-                        worksheet.Cells[row, 6].Value = registro.TipoDocumento;
-                        worksheet.Cells[row, 7].Value = registro.NumeroDocumento;
-                        worksheet.Cells[row, 8].Value = registro.Genero;
-                        worksheet.Cells[row, 9].Value = registro.Celular;
-                        worksheet.Cells[row, 10].Value = registro.Lugar;
-                        worksheet.Cells[row, 11].Value = registro.FechaRegistro.ToString("dd/MM/yyyy HH:mm:ss");
-                        
-                        worksheet.Cells[row, 12].Value = "N/A";
-                        worksheet.Cells[row, 13].Value = 0;
-                        worksheet.Cells[row, 14].Value = "N/A";
-                        
-                        row++;
-                    }
+                    // No mostramos registros sin transacciones
                 }
                 
                 var dataRange = worksheet.Cells[2, 1, row - 1, 14];
