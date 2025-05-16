@@ -46,16 +46,22 @@ namespace API_INDER_INFORMES.Controllers
                 
                 var transacciones = await _dashboardContext.Transactions
                  .Where(t => t.DATE_CREATED.Date == fecha.Date && t.ID_STATE_TRANSACTION == idEstadoAprobada)
-                    .Select(t => new
-                    {
-                        ID = t.ID,
-                        NumeroDocumento = t.DOCUMENT,
-                        Referencia = t.REFERENCE,
-                        Producto = t.PRODUCT,
-                        Monto = t.TOTAL_AMOUNT,
-                        IdPaypad = t.ID_PAYPAD,
-                        FechaTransaccion = t.DATE_CREATED
-                    })
+                 .Join(
+                     _dashboardContext.PayPads,
+                     t => t.ID_PAYPAD,
+                     p => p.ID,
+                     (t, p) => new
+                     {
+                         ID = t.ID,
+                         NumeroDocumento = t.DOCUMENT,
+                         Referencia = t.REFERENCE,
+                         Producto = t.PRODUCT,
+                         Monto = t.TOTAL_AMOUNT,
+                         IdPaypad = t.ID_PAYPAD,
+                         IdEstado = t.ID_STATE_TRANSACTION,
+                         Descripcion = p.DESCRIPTION,
+                         FechaTransaccion = t.DATE_CREATED
+                     })
                     .ToListAsync();
 
                 // 2. Obtener todos los usuarios de INDER para buscar coincidencias
@@ -117,6 +123,8 @@ namespace API_INDER_INFORMES.Controllers
                     transaccion.Producto,
                     transaccion.Monto,
                     transaccion.IdPaypad,
+                    transaccion.IdEstado,
+                    transaccion.Descripcion,
                     transaccion.FechaTransaccion,
                     DatosUsuario = datosUsuarioDefault
                 };
@@ -150,6 +158,8 @@ namespace API_INDER_INFORMES.Controllers
                                 transaccion.Producto,
                                 transaccion.Monto,
                                 transaccion.IdPaypad,
+                                transaccion.IdEstado,
+                                transaccion.Descripcion,
                                 transaccion.FechaTransaccion,
                                 DatosUsuario = datosUsuarioEncontrado
                             };
@@ -191,16 +201,22 @@ namespace API_INDER_INFORMES.Controllers
                 
                 var transacciones = await _dashboardContext.Transactions
                    .Where(t => t.DATE_CREATED.Date == fecha.Date && t.ID_STATE_TRANSACTION == idEstadoAprobada)
-                    .Select(t => new
-                    {
-                        ID = t.ID,
-                        NumeroDocumento = t.DOCUMENT,
-                        Referencia = t.REFERENCE,
-                        Producto = t.PRODUCT,
-                        Monto = t.TOTAL_AMOUNT,
-                        IdPaypad = t.ID_PAYPAD,
-                        FechaTransaccion = t.DATE_CREATED
-                    })
+                   .Join(
+                       _dashboardContext.PayPads,
+                       t => t.ID_PAYPAD,
+                       p => p.ID,
+                       (t, p) => new
+                       {
+                           ID = t.ID,
+                           NumeroDocumento = t.DOCUMENT,
+                           Referencia = t.REFERENCE,
+                           Producto = t.PRODUCT,
+                           Monto = t.TOTAL_AMOUNT,
+                           IdPaypad = t.ID_PAYPAD,
+                           IdEstado = t.ID_STATE_TRANSACTION,
+                           Descripcion = p.DESCRIPTION,
+                           FechaTransaccion = t.DATE_CREATED
+                       })
                     .ToListAsync();
 
                 // 2. Obtener todos los usuarios de INDER para buscar coincidencias
@@ -261,6 +277,9 @@ namespace API_INDER_INFORMES.Controllers
                         transaccion.Referencia,
                         transaccion.Producto,
                         transaccion.Monto,
+                        transaccion.IdPaypad,
+                        transaccion.IdEstado,
+                        transaccion.Descripcion,
                         transaccion.FechaTransaccion,
                         DatosUsuario = datosUsuarioDefault
                     };
@@ -293,6 +312,9 @@ namespace API_INDER_INFORMES.Controllers
                                 transaccion.Referencia,
                                 transaccion.Producto,
                                 transaccion.Monto,
+                                transaccion.IdPaypad,
+                                transaccion.IdEstado,
+                                transaccion.Descripcion,
                                 transaccion.FechaTransaccion,
                                 DatosUsuario = datosUsuarioEncontrado
                             };
