@@ -39,7 +39,7 @@ namespace API_INDER_INFORMES.Controllers
             {
                 // 1. Obtener transacciones de la fecha especificada
                 var transacciones = await _dashboardContext.Transactions
-                  .Where(t => t.DATE_CREATED.Date == fecha.Date && t.INCOME_AMOUNT != 0)
+                 .Where(t => t.DATE_CREATED.Date == fecha.Date)
                     .Select(t => new
                     {
                         ID = t.ID,
@@ -47,6 +47,7 @@ namespace API_INDER_INFORMES.Controllers
                         Referencia = t.REFERENCE,
                         Producto = t.PRODUCT,
                         Monto = t.TOTAL_AMOUNT,
+                        IdPaypad = t.ID_PAYPAD,
                         FechaTransaccion = t.DATE_CREATED
                     })
                     .ToListAsync();
@@ -109,6 +110,7 @@ namespace API_INDER_INFORMES.Controllers
                     transaccion.Referencia,
                     transaccion.Producto,
                     transaccion.Monto,
+                    transaccion.IdPaypad,
                     transaccion.FechaTransaccion,
                     DatosUsuario = datosUsuarioDefault
                 };
@@ -134,13 +136,14 @@ namespace API_INDER_INFORMES.Controllers
                             };
                             
                             // Actualizar infoTransaccion con los datos del usuario encontrado
-                            infoTransaccion = new
+                          infoTransaccion = new
                             {
                                 transaccion.ID,
                                 transaccion.NumeroDocumento,
                                 transaccion.Referencia,
                                 transaccion.Producto,
                                 transaccion.Monto,
+                                transaccion.IdPaypad,
                                 transaccion.FechaTransaccion,
                                 DatosUsuario = datosUsuarioEncontrado
                             };
@@ -175,7 +178,7 @@ namespace API_INDER_INFORMES.Controllers
             {
                 // 1. Obtener transacciones de la fecha especificada
                 var transacciones = await _dashboardContext.Transactions
-                    .Where(t => t.DATE_CREATED.Date == fecha.Date && t.INCOME_AMOUNT != 0)
+                   .Where(t => t.DATE_CREATED.Date == fecha.Date)
                     .Select(t => new
                     {
                         ID = t.ID,
@@ -183,6 +186,7 @@ namespace API_INDER_INFORMES.Controllers
                         Referencia = t.REFERENCE,
                         Producto = t.PRODUCT,
                         Monto = t.TOTAL_AMOUNT,
+                        IdPaypad = t.ID_PAYPAD,
                         FechaTransaccion = t.DATE_CREATED
                     })
                     .ToListAsync();
