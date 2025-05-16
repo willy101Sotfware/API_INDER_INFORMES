@@ -15,8 +15,13 @@ builder.Services.AddControllers();
 builder.Services.AddSingleton<EmailService>();
 
 
+// Configurar la conexión a la base de datos INDER_DATABASE
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Configurar la conexión a la base de datos DASHBOARD_PRODUCCION
+builder.Services.AddDbContext<DashboardDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DashboardConnection")));
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

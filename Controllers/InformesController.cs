@@ -14,15 +14,18 @@ namespace API_INDER_INFORMES.Controllers
     public class InformesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly DashboardDbContext _dashboardContext;
         private readonly IWebHostEnvironment _environment;
         private readonly EmailService _emailService;
 
         public InformesController(
-            ApplicationDbContext context, 
+            ApplicationDbContext context,
+            DashboardDbContext dashboardContext,
             IWebHostEnvironment environment,
             EmailService emailService)
         {
             _context = context;
+            _dashboardContext = dashboardContext;
             _environment = environment;
             _emailService = emailService;
         }
@@ -30,7 +33,8 @@ namespace API_INDER_INFORMES.Controllers
         [HttpGet("generar-informe")]
         public async Task<IActionResult> GenerarInforme([FromQuery] DateTime fecha)
         {
-            var registros = await _context.FormularioInder
+            // Obtener los registros de INDER_DATABASE
+            var registrosInder = await _context.FormularioInder
                 .Join(_context.DisponibilidadHorariosInder,
                     f => f.Id,
                     d => d.IdDis,
@@ -53,6 +57,59 @@ namespace API_INDER_INFORMES.Controllers
                 .OrderBy(r => r.Apellidos)
                 .ThenBy(r => r.Nombres)
                 .ToListAsync();
+                
+            // Obtener las transacciones de DASHBOARD_PRODUCCION directamente sin proyección
+            var transacciones = await _dashboardContext.Transactions
+                .AsNoTracking() // Para mejorar el rendimiento
+                .Where(t => t.DATE_CREATED.Date == fecha.Date)
+                .ToListAsync();
+                
+            // Imprimir información de diagnóstico para verificar los datos
+            System.Diagnostics.Debug.WriteLine($"Total de transacciones recuperadas: {transacciones.Count}");
+            foreach (var t in transacciones.Take(5)) // Imprimir las primeras 5 para diagnóstico
+            {
+                System.Diagnostics.Debug.WriteLine($"ID: {t.ID}, Doc: {t.DOCUMENT}, Ref: {t.REFERENCE}, Monto: {t.TOTAL_AMOUNT}");
+            }
+                
+            // Obtener los detalles de transacciones
+            var detallesTransacciones = await _dashboardContext.TransactionDetails
+                .ToListAsync();
+                
+            // Normalizar los números de documento para mejorar la coincidencia
+            foreach (var transaccion in transacciones)
+            {
+                if (transaccion.DOCUMENT != null)
+                {
+                    // Eliminar espacios, puntos y guiones
+                    transaccion.DOCUMENT = transaccion.DOCUMENT.Replace(" ", "").Replace(".", "").Replace("-", "");
+                }
+            }
+            
+            // Obtener los registros de INDER con sus transacciones
+            var registros = registrosInder
+                .Select(r => new
+                {
+                    r.Nombres,
+                    r.Apellidos,
+                    r.Correo,
+                    r.Direccion,
+                    r.FechaNacimiento,
+                    r.TipoDocumento,
+                    r.NumeroDocumento,
+                    r.Genero,
+                    r.Celular,
+                    r.Lugar,
+                    r.FechaRegistro,
+                    // Buscar las transacciones que coinciden con este número de documento
+                    Transacciones = transacciones
+                        .Where(t => t.DOCUMENT != null && 
+                               r.NumeroDocumento != null && 
+                               t.DOCUMENT.Trim().Equals(r.NumeroDocumento.Trim(), StringComparison.OrdinalIgnoreCase))
+                        .ToList()
+                })
+                .OrderBy(r => r.Apellidos)
+                .ThenBy(r => r.Nombres)
+                .ToList();
 
             var fileName = $"Informe_INDER_{fecha:yyyyMMdd}.xlsx";
             var wwwrootPath = Path.Combine(_environment.WebRootPath, "Informes");
@@ -67,31 +124,30 @@ namespace API_INDER_INFORMES.Controllers
             using (var package = new ExcelPackage())
             {
                 var worksheet = package.Workbook.Worksheets.Add("Registros");
-                
-            
-                worksheet.Cells[1, 1, 1, 12].Merge = true;
+                // Agregar título principal
+                worksheet.Cells[1, 1, 1, 14].Merge = true;
                 worksheet.Cells[1, 1].Value = $"INFORME DIARIO INDER - {fecha:dd/MM/yyyy}";
-                var titleStyle = worksheet.Cells[1, 1, 1, 12].Style;
+                var titleStyle = worksheet.Cells[1, 1, 1, 14].Style;
                 titleStyle.Font.Size = 16;
                 titleStyle.Font.Bold = true;
                 titleStyle.Fill.PatternType = ExcelFillStyle.Solid;
-                titleStyle.Fill.BackgroundColor.SetColor(Color.FromArgb(0, 112, 192)); 
+                titleStyle.Fill.BackgroundColor.SetColor(Color.FromArgb(0, 112, 192)); // Azul INDER
                 titleStyle.Font.Color.SetColor(Color.White);
                 titleStyle.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 titleStyle.VerticalAlignment = ExcelVerticalAlignment.Center;
-                worksheet.Row(1).Height = 30; 
-
-             
-                var headerStyle = worksheet.Cells[2, 1, 2, 12].Style;
+                worksheet.Row(1).Height = 30; // Altura de la fila del título
+                
+                // Estilo para el encabezado de columnas (ahora en fila 2)
+                var headerStyle = worksheet.Cells[2, 1, 2, 14].Style;
                 headerStyle.Fill.PatternType = ExcelFillStyle.Solid;
                 headerStyle.Fill.BackgroundColor.SetColor(Color.LightBlue);
                 headerStyle.Font.Bold = true;
                 headerStyle.Font.Size = 12;
                 headerStyle.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 headerStyle.VerticalAlignment = ExcelVerticalAlignment.Center;
-                worksheet.Row(2).Height = 25; 
+                worksheet.Row(2).Height = 25; // Altura para la fila de encabezados
 
-              
+                // Agregar encabezados en fila 2
                 worksheet.Cells[2, 1].Value = "NOMBRES";
                 worksheet.Cells[2, 2].Value = "APELLIDOS";
                 worksheet.Cells[2, 3].Value = "CORREO";
@@ -101,32 +157,117 @@ namespace API_INDER_INFORMES.Controllers
                 worksheet.Cells[2, 7].Value = "NÚMERO DOCUMENTO";
                 worksheet.Cells[2, 8].Value = "GÉNERO";
                 worksheet.Cells[2, 9].Value = "CELULAR";
-                worksheet.Cells[2, 10].Value = "EDAD";
-                worksheet.Cells[2, 11].Value = "LUGAR";
-                worksheet.Cells[2, 12].Value = "FECHA REGISTRO";
+                worksheet.Cells[2, 10].Value = "LUGAR";
+                worksheet.Cells[2, 11].Value = "FECHA REGISTRO";
+                worksheet.Cells[2, 12].Value = "REFERENCIA";
+                worksheet.Cells[2, 13].Value = "TOTAL MONTO";
+                worksheet.Cells[2, 14].Value = "FECHA TRANSACCIÓN";
 
-              
+                // Agregar datos empezando en la fila 3
                 int row = 3;
                 foreach (var registro in registros)
                 {
-                    worksheet.Cells[row, 1].Value = registro.Nombres;
-                    worksheet.Cells[row, 2].Value = registro.Apellidos;
-                    worksheet.Cells[row, 3].Value = registro.Correo;
-                    worksheet.Cells[row, 4].Value = registro.Direccion;
-                    worksheet.Cells[row, 5].Value = registro.FechaNacimiento;
-                    worksheet.Cells[row, 6].Value = registro.TipoDocumento;
-                    worksheet.Cells[row, 7].Value = registro.NumeroDocumento;
-                    worksheet.Cells[row, 8].Value = registro.Genero;
-                    worksheet.Cells[row, 9].Value = registro.Celular;
-                    worksheet.Cells[row, 10].Value = registro.Edad;
-                    worksheet.Cells[row, 11].Value = registro.Lugar;
-               
-                    worksheet.Cells[row, 12].Value = registro.FechaRegistro.ToString("dd/MM/yyyy HH:mm:ss");
-                    row++;
+                    bool primeraFila = true;
+                    
+                    // Si hay transacciones para este documento, mostrar una fila por cada transacción
+                    if (registro.Transacciones != null && registro.Transacciones.Count > 0)
+                    {
+                        foreach (var transaccion in registro.Transacciones)
+                        {
+                            // Solo en la primera fila de cada persona, mostrar sus datos personales
+                            if (primeraFila)
+                            {
+                                worksheet.Cells[row, 1].Value = registro.Nombres;
+                                worksheet.Cells[row, 2].Value = registro.Apellidos;
+                                worksheet.Cells[row, 3].Value = registro.Correo;
+                                worksheet.Cells[row, 4].Value = registro.Direccion;
+                                worksheet.Cells[row, 5].Value = registro.FechaNacimiento;
+                                worksheet.Cells[row, 6].Value = registro.TipoDocumento;
+                                worksheet.Cells[row, 7].Value = registro.NumeroDocumento;
+                                worksheet.Cells[row, 8].Value = registro.Genero;
+                                worksheet.Cells[row, 9].Value = registro.Celular;
+                                worksheet.Cells[row, 10].Value = registro.Lugar;
+                                worksheet.Cells[row, 11].Value = registro.FechaRegistro.ToString("dd/MM/yyyy HH:mm:ss");
+                                primeraFila = false;
+                            }
+                            else
+                            {
+                                // Para filas adicionales, repetir solo el número de documento para referencia
+                                worksheet.Cells[row, 7].Value = registro.NumeroDocumento;
+                            }
+                            
+                            try
+                            {
+                                // Imprimir datos de diagnóstico para cada transacción
+                                System.Diagnostics.Debug.WriteLine($"Procesando transacción: ID={transaccion.ID}, Doc={transaccion.DOCUMENT}, Ref={transaccion.REFERENCE}, Monto={transaccion.TOTAL_AMOUNT}");
+                                
+                                // Manejar valores nulos con más detalle
+                                if (transaccion.REFERENCE != null)
+                                {
+                                    worksheet.Cells[row, 12].Value = transaccion.REFERENCE;
+                                }
+                                else
+                                {
+                                    worksheet.Cells[row, 12].Value = "N/A";
+                                }
+                                
+                                if (transaccion.TOTAL_AMOUNT.HasValue)
+                                {
+                                    worksheet.Cells[row, 13].Value = transaccion.TOTAL_AMOUNT.Value;
+                                    // Aplicar formato de moneda a la columna de monto
+                                    worksheet.Cells[row, 13].Style.Numberformat.Format = "$#,##0.00";
+                                }
+                                else
+                                {
+                                    worksheet.Cells[row, 13].Value = 0.0;
+                                    worksheet.Cells[row, 13].Style.Numberformat.Format = "$#,##0.00";
+                                }
+                                
+                                if (transaccion.DATE_CREATED != DateTime.MinValue)
+                                {
+                                    worksheet.Cells[row, 14].Value = transaccion.DATE_CREATED.ToString("dd/MM/yyyy HH:mm:ss");
+                                }
+                                else
+                                {
+                                    worksheet.Cells[row, 14].Value = "N/A";
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                // Si hay algún error al procesar la transacción, registrarlo y continuar
+                                System.Diagnostics.Debug.WriteLine($"Error al procesar transacción: {ex.Message}");
+                                worksheet.Cells[row, 12].Value = "Error: " + ex.Message;
+                                worksheet.Cells[row, 13].Value = 0;
+                                worksheet.Cells[row, 14].Value = "Error";
+                            }
+                            
+                            row++;
+                        }
+                    }
+                    else
+                    {
+                        // Si no hay transacciones, mostrar solo una fila con los datos personales
+                        worksheet.Cells[row, 1].Value = registro.Nombres;
+                        worksheet.Cells[row, 2].Value = registro.Apellidos;
+                        worksheet.Cells[row, 3].Value = registro.Correo;
+                        worksheet.Cells[row, 4].Value = registro.Direccion;
+                        worksheet.Cells[row, 5].Value = registro.FechaNacimiento;
+                        worksheet.Cells[row, 6].Value = registro.TipoDocumento;
+                        worksheet.Cells[row, 7].Value = registro.NumeroDocumento;
+                        worksheet.Cells[row, 8].Value = registro.Genero;
+                        worksheet.Cells[row, 9].Value = registro.Celular;
+                        worksheet.Cells[row, 10].Value = registro.Lugar;
+                        worksheet.Cells[row, 11].Value = registro.FechaRegistro.ToString("dd/MM/yyyy HH:mm:ss");
+                        
+                        worksheet.Cells[row, 12].Value = "N/A";
+                        worksheet.Cells[row, 13].Value = 0;
+                        worksheet.Cells[row, 14].Value = "N/A";
+                        
+                        row++;
+                    }
                 }
                 
-        
-                var dataRange = worksheet.Cells[2, 1, row - 1, 12];
+                var dataRange = worksheet.Cells[2, 1, row - 1, 14];
                 dataRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                 dataRange.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                 dataRange.Style.Border.Right.Style = ExcelBorderStyle.Thin;
