@@ -19,7 +19,7 @@ namespace API_INDER_INFORMES.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configurar el esquema para las tablas
+          
             modelBuilder.Entity<Transaction>().ToTable("Transactions", "business");
             modelBuilder.Entity<TransactionDetail>().ToTable("TransactionsDetail", "business");
             modelBuilder.Entity<StateTransaction>().ToTable("StateTransaction", "masters");

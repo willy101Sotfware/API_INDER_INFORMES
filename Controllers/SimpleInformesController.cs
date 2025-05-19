@@ -43,7 +43,7 @@ namespace API_INDER_INFORMES.Controllers
             try
             {
                 // 1. Obtener transacciones de la fecha especificada con estado Aprobada
-                // Primero, obtener el ID del estado Aprobada
+        
                 var estadoAprobada = await _dashboardContext.StateTransactions
                     .FirstOrDefaultAsync(s => s.STATE == "Aprobada");
                 
@@ -93,7 +93,7 @@ namespace API_INDER_INFORMES.Controllers
                 {
                     if (!string.IsNullOrEmpty(usuario.NumeroDocumento))
                     {
-                        // Normalizar el documento para mejorar coincidencias
+                      
                         var docNormalizado = usuario.NumeroDocumento.Replace(" ", "").Replace(".", "").Replace("-", "");
                         usuariosPorDocumento[docNormalizado] = usuario;
                     }
@@ -103,10 +103,10 @@ namespace API_INDER_INFORMES.Controllers
                 var resultado = new List<object>();
                 foreach (var transaccion in transacciones)
                 {
-                    // Crear el objeto con la información de la transacción
+                    
                 object infoTransaccion;
                 
-                // Valores por defecto para usuario no encontrado
+          
                 var datosUsuarioDefault = new
                 {
                     Nombres = "Sin registro",
@@ -134,13 +134,13 @@ namespace API_INDER_INFORMES.Controllers
                     DatosUsuario = datosUsuarioDefault
                 };
 
-                    // Si hay un número de documento, buscar si hay un usuario asociado
+              
                     if (!string.IsNullOrEmpty(transaccion.NumeroDocumento))
                     {
                         var docNormalizado = transaccion.NumeroDocumento.Replace(" ", "").Replace(".", "").Replace("-", "");
                         if (usuariosPorDocumento.TryGetValue(docNormalizado, out var usuario))
                         {
-                            // Si se encuentra el usuario, crear un nuevo objeto con los datos del usuario
+                    
                             var datosUsuarioEncontrado = new
                             {
                                 Nombres = usuario.Nombres ?? "Sin registro",
@@ -154,7 +154,7 @@ namespace API_INDER_INFORMES.Controllers
                                 UsuarioEncontrado = true
                             };
                             
-                            // Actualizar infoTransaccion con los datos del usuario encontrado
+                          
                           infoTransaccion = new
                             {
                                 transaccion.ID,
@@ -171,7 +171,7 @@ namespace API_INDER_INFORMES.Controllers
                         }
                     }
 
-                    // Solo agregar al resultado si tiene número de documento y se encontró un usuario
+            
                     if (!string.IsNullOrEmpty(transaccion.NumeroDocumento) && 
                         ((dynamic)infoTransaccion).DatosUsuario.UsuarioEncontrado)
                     {
@@ -198,7 +198,7 @@ namespace API_INDER_INFORMES.Controllers
             try
             {
                 // 1. Obtener transacciones de la fecha especificada con estado Aprobada
-                // Primero, obtener el ID del estado Aprobada
+            
                 var estadoAprobada = await _dashboardContext.StateTransactions
                     .FirstOrDefaultAsync(s => s.STATE == "Aprobada");
                 
@@ -248,7 +248,7 @@ namespace API_INDER_INFORMES.Controllers
                 {
                     if (!string.IsNullOrEmpty(usuario.NumeroDocumento))
                     {
-                        // Normalizar el documento para mejorar coincidencias
+                       
                         var docNormalizado = usuario.NumeroDocumento.Replace(" ", "").Replace(".", "").Replace("-", "");
                         usuariosPorDocumento[docNormalizado] = usuario;
                     }
@@ -258,10 +258,10 @@ namespace API_INDER_INFORMES.Controllers
                 var resultado = new List<object>();
                 foreach (var transaccion in transacciones)
                 {
-                    // Crear el objeto con la información de la transacción
+                  
                     object infoTransaccion;
                 
-                    // Valores por defecto para usuario no encontrado
+                  
                     var datosUsuarioDefault = new
                     {
                         Nombres = "Sin registro",
@@ -289,13 +289,13 @@ namespace API_INDER_INFORMES.Controllers
                         DatosUsuario = datosUsuarioDefault
                     };
 
-                    // Si hay un número de documento, buscar si hay un usuario asociado
+                  
                     if (!string.IsNullOrEmpty(transaccion.NumeroDocumento))
                     {
                         var docNormalizado = transaccion.NumeroDocumento.Replace(" ", "").Replace(".", "").Replace("-", "");
                         if (usuariosPorDocumento.TryGetValue(docNormalizado, out var usuario))
                         {
-                            // Si se encuentra el usuario, crear un nuevo objeto con los datos del usuario
+                            
                             var datosUsuarioEncontrado = new
                             {
                                 Nombres = usuario.Nombres ?? "Sin registro",
@@ -309,7 +309,7 @@ namespace API_INDER_INFORMES.Controllers
                                 UsuarioEncontrado = true
                             };
                             
-                            // Actualizar infoTransaccion con los datos del usuario encontrado
+                   
                             infoTransaccion = new
                             {
                                 transaccion.ID,
@@ -327,7 +327,7 @@ namespace API_INDER_INFORMES.Controllers
                         }
                     }
 
-                    // Solo agregar al resultado si tiene número de documento y se encontró un usuario
+                   
                     if (!string.IsNullOrEmpty(transaccion.NumeroDocumento) && 
                         ((dynamic)infoTransaccion).DatosUsuario.UsuarioEncontrado)
                     {
@@ -339,21 +339,21 @@ namespace API_INDER_INFORMES.Controllers
                 var fileName = $"Informe_Transacciones_{fecha:yyyy-MM-dd}.xlsx";
                 var filePath = Path.Combine(_environment.ContentRootPath, "Temp", fileName);
 
-                // Asegurar que el directorio Temp exista
+                
                 Directory.CreateDirectory(Path.Combine(_environment.ContentRootPath, "Temp"));
                 
-                // Eliminar el archivo si ya existe
+               
                 if (System.IO.File.Exists(filePath))
                 {
                     System.IO.File.Delete(filePath);
                 }
 
-                // Crear el archivo Excel
+              
                 using (var package = new ExcelPackage(new FileInfo(filePath)))
                 {
                     var worksheet = package.Workbook.Worksheets.Add("Informe");
 
-                    // Configurar encabezados
+                    
                     worksheet.Cells[1, 1].Value = "Nombres";
                     worksheet.Cells[1, 2].Value = "Apellidos";
                     worksheet.Cells[1, 3].Value = "Correo";
@@ -370,14 +370,14 @@ namespace API_INDER_INFORMES.Controllers
                     worksheet.Cells[1, 14].Value = "Fecha Transacción";
                     worksheet.Cells[1, 15].Value = "Descripción Paypad";
 
-                    // Dar formato a los encabezados
+                 
                     var headerRange = worksheet.Cells[1, 1, 1, 15];
                     headerRange.Style.Font.Bold = true;
                     headerRange.Style.Fill.PatternType = ExcelFillStyle.Solid;
                     headerRange.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     headerRange.Style.Font.Color.SetColor(Color.Black);
 
-                    // Llenar datos
+                   
                     int row = 2;
                     foreach (dynamic item in resultado)
                     {
@@ -399,17 +399,17 @@ namespace API_INDER_INFORMES.Controllers
                         row++;
                     }
 
-                    // Autoajustar columnas
+                 
                     worksheet.Cells.AutoFitColumns();
 
-                    // Guardar el archivo
+                   
                     package.Save();
                 }
 
-                // Enviar el archivo por correo electrónico
+                
                 await EnviarCorreoConExcel(filePath, fileName, fecha);
                 
-                // Devolver el archivo para descarga
+           
                 byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
                 return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
             }
@@ -426,16 +426,16 @@ namespace API_INDER_INFORMES.Controllers
                 string subject = $"Informe de Transacciones INDER - {fecha:yyyy-MM-dd}";
                 string body = $"<html><body><p>Adjunto encontrará el informe de transacciones del {fecha:dd/MM/yyyy}.</p><p>Este es un correo automático, por favor no responda a este mensaje.</p></body></html>";
                 
-                // Enviar correo al destinatario principal
+               
                 await _emailService.SendEmailAsync("wruiz@e-city.co", subject, body, filePath);
                 
-                // Enviar copias a contabilidad y tesorería
+               
                 await _emailService.SendEmailAsync("contabilidad.inder@bello.gov.co", subject, body, filePath);
                 await _emailService.SendEmailAsync("tesoreria.inder@bello.edu.co", subject, body, filePath);
             }
             catch (Exception ex)
             {
-                // Registrar el error pero no lanzar excepción para no interrumpir el flujo principal
+                
                 Console.WriteLine($"Error al enviar correo: {ex.Message}");
             }
         }
