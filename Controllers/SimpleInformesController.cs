@@ -11,6 +11,8 @@ using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.Drawing;
 using Microsoft.AspNetCore.Hosting;
+using System.Text;
+using API_INDER_INFORMES.Services;
 
 namespace API_INDER_INFORMES.Controllers
 {
@@ -21,15 +23,18 @@ namespace API_INDER_INFORMES.Controllers
         private readonly ApplicationDbContext _inderContext;
         private readonly DashboardDbContext _dashboardContext;
         private readonly IWebHostEnvironment _environment;
+        private readonly EmailService _emailService;
 
         public SimpleInformesController(
             ApplicationDbContext inderContext,
             DashboardDbContext dashboardContext,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            EmailService emailService)
         {
             _inderContext = inderContext;
             _dashboardContext = dashboardContext;
             _environment = environment;
+            _emailService = emailService;
         }
 
         [HttpGet("generar-informe-simple")]
@@ -316,7 +321,8 @@ namespace API_INDER_INFORMES.Controllers
                                 transaccion.IdEstado,
                                 transaccion.Descripcion,
                                 transaccion.FechaTransaccion,
-                                DatosUsuario = datosUsuarioEncontrado
+                                DatosUsuario = datosUsuarioEncontrado,
+                                DescripcionPaypad = transaccion.Descripcion
                             };
                         }
                     }
@@ -362,9 +368,10 @@ namespace API_INDER_INFORMES.Controllers
                     worksheet.Cells[1, 12].Value = "Producto";
                     worksheet.Cells[1, 13].Value = "Monto";
                     worksheet.Cells[1, 14].Value = "Fecha Transacción";
+                    worksheet.Cells[1, 15].Value = "Descripción Paypad";
 
                     // Dar formato a los encabezados
-                    var headerRange = worksheet.Cells[1, 1, 1, 14];
+                    var headerRange = worksheet.Cells[1, 1, 1, 15];
                     headerRange.Style.Font.Bold = true;
                     headerRange.Style.Fill.PatternType = ExcelFillStyle.Solid;
                     headerRange.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
@@ -388,6 +395,7 @@ namespace API_INDER_INFORMES.Controllers
                         worksheet.Cells[row, 12].Value = item.Producto;
                         worksheet.Cells[row, 13].Value = item.Monto;
                         worksheet.Cells[row, 14].Value = item.FechaTransaccion.ToString("dd/MM/yyyy HH:mm:ss");
+                        worksheet.Cells[row, 15].Value = item.DescripcionPaypad;
                         row++;
                     }
 
@@ -398,6 +406,9 @@ namespace API_INDER_INFORMES.Controllers
                     package.Save();
                 }
 
+                // Enviar el archivo por correo electrónico
+                await EnviarCorreoConExcel(filePath, fileName, fecha);
+                
                 // Devolver el archivo para descarga
                 byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
                 return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
@@ -405,6 +416,27 @@ namespace API_INDER_INFORMES.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { error = ex.Message, stackTrace = ex.StackTrace });
+            }
+        }
+
+        private async Task EnviarCorreoConExcel(string filePath, string fileName, DateTime fecha)
+        {
+            try
+            {
+                string subject = $"Informe de Transacciones INDER - {fecha:yyyy-MM-dd}";
+                string body = $"<html><body><p>Adjunto encontrará el informe de transacciones del {fecha:dd/MM/yyyy}.</p><p>Este es un correo automático, por favor no responda a este mensaje.</p></body></html>";
+                
+                // Enviar correo al destinatario principal
+                await _emailService.SendEmailAsync("wruiz@e-city.co", subject, body, filePath);
+                
+                // Enviar copias a contabilidad y tesorería
+                await _emailService.SendEmailAsync("contabilidad.inder@bello.gov.co", subject, body, filePath);
+                await _emailService.SendEmailAsync("tesoreria.inder@bello.edu.co", subject, body, filePath);
+            }
+            catch (Exception ex)
+            {
+                // Registrar el error pero no lanzar excepción para no interrumpir el flujo principal
+                Console.WriteLine($"Error al enviar correo: {ex.Message}");
             }
         }
     }
