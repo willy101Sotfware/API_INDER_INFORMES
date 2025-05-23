@@ -431,7 +431,7 @@ namespace API_INDER_INFORMES.Controllers
                 
                
                 await _emailService.SendEmailAsync("contabilidad.inder@bello.gov.co", subject, body, filePath);
-                await _emailService.SendEmailAsync("tesoreria.inder@bello.gov.co", subject, body, filePath);
+                await _emailService.SendEmailAsync("posventa@e-city.co", subject, body, filePath);
             }
             catch (Exception ex)
             {
