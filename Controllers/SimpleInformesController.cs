@@ -50,7 +50,7 @@ namespace API_INDER_INFORMES.Controllers
                 int idEstadoAprobada = estadoAprobada?.ID ?? 0;
                 
                 var transacciones = await _dashboardContext.Transactions
-                 .Where(t => t.DATE_CREATED.Date == fecha.Date && t.ID_STATE_TRANSACTION == idEstadoAprobada)
+                 .Where(t => t.DATE_CREATED.Date == fecha.Date && t.ID_STATE_TRANSACTION == idEstadoAprobada && t.ID_PAYPAD != 1) // Excluir IdPaypad = 1 (datos de prueba)
                  .Join(
                      _dashboardContext.PayPads,
                      t => t.ID_PAYPAD,
@@ -205,7 +205,7 @@ namespace API_INDER_INFORMES.Controllers
                 int idEstadoAprobada = estadoAprobada?.ID ?? 0;
                 
                 var transacciones = await _dashboardContext.Transactions
-                   .Where(t => t.DATE_CREATED.Date == fecha.Date && t.ID_STATE_TRANSACTION == idEstadoAprobada)
+                   .Where(t => t.DATE_CREATED.Date == fecha.Date && t.ID_STATE_TRANSACTION == idEstadoAprobada && t.ID_PAYPAD != 1) // Excluir IdPaypad = 1 (datos de prueba)
                    .Join(
                        _dashboardContext.PayPads,
                        t => t.ID_PAYPAD,
