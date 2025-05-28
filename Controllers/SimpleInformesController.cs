@@ -424,7 +424,7 @@ public class SimpleInformesController : ControllerBase
            
             await _emailService.SendEmailAsync("contabilidad.inder@bello.gov.co", subject, body, filePath);
             await _emailService.SendEmailAsync("posventa@e-city.co", subject, body, filePath);
-            await _emailService.SendEmailAsync("indergoretti2024@gmail.com", subject, body, filePath);
+            await _emailService.SendEmailAsync("jdavidruiz333@gmail.com", subject, body, filePath);
         }
         catch (Exception ex)
         {
