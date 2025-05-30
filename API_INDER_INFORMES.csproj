@@ -20,6 +20,9 @@
 
   <ItemGroup>
     <Folder Include="Informes\" />
+    <Content Include="Assets\Img\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

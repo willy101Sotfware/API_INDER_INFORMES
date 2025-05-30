@@ -346,62 +346,114 @@ public class SimpleInformesController : ControllerBase
                 var worksheet = package.Workbook.Worksheets.Add("Informe");
 
                 // Add title
-                worksheet.Cells[1, 1].Value = "INFORME DIARIO TRANSACCIONES INDER";
-                worksheet.Cells[1, 1, 1, 15].Merge = true;
-                worksheet.Cells[1, 1].Style.Font.Bold = true;
-                worksheet.Cells[1, 1].Style.Font.Size = 16;
-                worksheet.Cells[1, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                worksheet.Cells[1, 1].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
-                worksheet.Cells[1, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                worksheet.Cells[1, 1].Style.Fill.BackgroundColor.SetColor(Color.LightBlue);
+                worksheet.Cells[2, 1].Value = "INFORME DIARIO TRANSACCIONES INDER";
+                worksheet.Cells[2, 1, 2, 15].Merge = true;
+                worksheet.Cells[2, 1].Style.Font.Bold = true;
+                worksheet.Cells[2, 1].Style.Font.Size = 16;
+                worksheet.Cells[2, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                worksheet.Cells[2, 1].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                worksheet.Cells[2, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                worksheet.Cells[2, 1].Style.Fill.BackgroundColor.SetColor(Color.LightBlue);
 
                 // Add header row
-                worksheet.Cells[2, 1].Value = "Nombres";
-                worksheet.Cells[2, 2].Value = "Apellidos";
-                worksheet.Cells[2, 3].Value = "Correo";
-                worksheet.Cells[2, 4].Value = "Dirección";
-                worksheet.Cells[2, 5].Value = "Fecha Nacimiento";
-                worksheet.Cells[2, 6].Value = "Tipo Documento";
-                worksheet.Cells[2, 7].Value = "Número Documento";
-                worksheet.Cells[2, 8].Value = "Género";
-                worksheet.Cells[2, 9].Value = "Celular";
-                worksheet.Cells[2, 10].Value = "ID Transacción";
-                worksheet.Cells[2, 11].Value = "Referencia";
-                worksheet.Cells[2, 12].Value = "Producto";
-                worksheet.Cells[2, 13].Value = "Monto";
-                worksheet.Cells[2, 14].Value = "Fecha Transacción";
-                worksheet.Cells[2, 15].Value = "Descripción Paypad";
+                worksheet.Cells[3, 1].Value = "Nombres";
+                worksheet.Cells[3, 2].Value = "Apellidos";
+                worksheet.Cells[3, 3].Value = "Correo";
+                worksheet.Cells[3, 4].Value = "Dirección";
+                worksheet.Cells[3, 5].Value = "Fecha Nacimiento";
+                worksheet.Cells[3, 6].Value = "Tipo Documento";
+                worksheet.Cells[3, 7].Value = "Número Documento";
+                worksheet.Cells[3, 8].Value = "Género";
+                worksheet.Cells[3, 9].Value = "Celular";
+                worksheet.Cells[3, 10].Value = "ID Transacción";
+                worksheet.Cells[3, 11].Value = "Referencia";
+                worksheet.Cells[3, 12].Value = "Producto";
+                worksheet.Cells[3, 13].Value = "Monto";
+                worksheet.Cells[3, 14].Value = "Fecha Transacción";
+                worksheet.Cells[3, 15].Value = "Descripción Paypad";
 
                 // Style header row
-                var headerRange = worksheet.Cells[2, 1, 2, 15];
+                var headerRange = worksheet.Cells[3, 1, 3, 15];
                 headerRange.Style.Font.Bold = true;
+                headerRange.Style.Font.Size = 12;
                 headerRange.Style.Fill.PatternType = ExcelFillStyle.Solid;
                 headerRange.Style.Fill.BackgroundColor.SetColor(Color.LightBlue);
                 headerRange.Style.Font.Color.SetColor(Color.Black);
                 headerRange.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 headerRange.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
 
-                // Add data rows
-                int row = 3;
-                foreach (dynamic item in resultado)
+                // Group transactions by Paypad description
+                var groupedTransactions = resultado
+                    .GroupBy(t => ((dynamic)t).DescripcionPaypad)
+                    .OrderBy(g => g.Key)
+                    .ToList();
+
+                int row = 4; // Start data from row 4 to leave space for image and title/header
+                double totalGeneral = 0;
+                int totalTransacciones = 0;
+
+                foreach (var group in groupedTransactions)
                 {
-                    worksheet.Cells[row, 1].Value = item.DatosUsuario.Nombres;
-                    worksheet.Cells[row, 2].Value = item.DatosUsuario.Apellidos;
-                    worksheet.Cells[row, 3].Value = item.DatosUsuario.Correo;
-                    worksheet.Cells[row, 4].Value = item.DatosUsuario.Direccion;
-                    worksheet.Cells[row, 5].Value = item.DatosUsuario.FechaNacimiento;
-                    worksheet.Cells[row, 6].Value = item.DatosUsuario.TipoDocumento;
-                    worksheet.Cells[row, 7].Value = item.NumeroDocumento;
-                    worksheet.Cells[row, 8].Value = item.DatosUsuario.Genero;
-                    worksheet.Cells[row, 9].Value = item.DatosUsuario.Celular;
-                    worksheet.Cells[row, 10].Value = item.ID;
-                    worksheet.Cells[row, 11].Value = item.Referencia;
-                    worksheet.Cells[row, 12].Value = item.Producto;
-                    worksheet.Cells[row, 13].Value = item.Monto;
-                    worksheet.Cells[row, 14].Value = item.FechaTransaccion.ToString("dd/MM/yyyy HH:mm:ss");
-                    worksheet.Cells[row, 15].Value = item.DescripcionPaypad;
+                    // Add Paypad description as group header
+                    worksheet.Cells[row, 1].Value = $"Paypad: {group.Key}";
+                    worksheet.Cells[row, 1, row, 15].Merge = true;
+                    worksheet.Cells[row, 1].Style.Font.Bold = true;
+                    worksheet.Cells[row, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[row, 1].Style.Fill.BackgroundColor.SetColor(Color.LightGray);
                     row++;
+
+                    double subtotalGrupo = 0;
+                    int transaccionesGrupo = 0;
+
+                    // Add transactions for this group
+                    foreach (dynamic item in group)
+                    {
+                        worksheet.Cells[row, 1].Value = item.DatosUsuario.Nombres;
+                        worksheet.Cells[row, 2].Value = item.DatosUsuario.Apellidos;
+                        worksheet.Cells[row, 3].Value = item.DatosUsuario.Correo;
+                        worksheet.Cells[row, 4].Value = item.DatosUsuario.Direccion;
+                        worksheet.Cells[row, 5].Value = item.DatosUsuario.FechaNacimiento;
+                        worksheet.Cells[row, 6].Value = item.DatosUsuario.TipoDocumento;
+                        worksheet.Cells[row, 7].Value = item.NumeroDocumento;
+                        worksheet.Cells[row, 8].Value = item.DatosUsuario.Genero;
+                        worksheet.Cells[row, 9].Value = item.DatosUsuario.Celular;
+                        worksheet.Cells[row, 10].Value = item.ID;
+                        worksheet.Cells[row, 11].Value = item.Referencia;
+                        worksheet.Cells[row, 12].Value = item.Producto;
+                        worksheet.Cells[row, 13].Value = item.Monto;
+                        worksheet.Cells[row, 14].Value = item.FechaTransaccion.ToString("dd/MM/yyyy HH:mm:ss");
+                        worksheet.Cells[row, 15].Value = item.DescripcionPaypad;
+
+                        subtotalGrupo += item.Monto ?? 0;
+                        transaccionesGrupo++;
+                        row++;
+                    }
+
+                    // Add subtotal for this group
+                    worksheet.Cells[row, 1].Value = $"Subtotal {group.Key}";
+                    worksheet.Cells[row, 1, row, 12].Merge = true;
+                    worksheet.Cells[row, 13].Value = subtotalGrupo;
+                    worksheet.Cells[row, 14].Value = $"Transacciones: {transaccionesGrupo}";
+                    worksheet.Cells[row, 14, row, 15].Merge = true;
+                    worksheet.Cells[row, 1, row, 15].Style.Font.Bold = true;
+                    worksheet.Cells[row, 1, row, 15].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[row, 1, row, 15].Style.Fill.BackgroundColor.SetColor(Color.LightYellow);
+                    row++;
+
+                    totalGeneral += subtotalGrupo;
+                    totalTransacciones += transaccionesGrupo;
                 }
+
+                // Add grand total
+                worksheet.Cells[row, 1].Value = "TOTAL GENERAL";
+                worksheet.Cells[row, 1, row, 12].Merge = true;
+                worksheet.Cells[row, 13].Value = totalGeneral;
+                worksheet.Cells[row, 14].Value = $"Total Transacciones: {totalTransacciones}";
+                worksheet.Cells[row, 14, row, 15].Merge = true;
+                worksheet.Cells[row, 1, row, 15].Style.Font.Bold = true;
+                worksheet.Cells[row, 1, row, 15].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                worksheet.Cells[row, 1, row, 15].Style.Fill.BackgroundColor.SetColor(Color.LightBlue);
+                row++;
 
                 // Add footer
                 worksheet.Cells[row + 1, 1].Value = "Ecity-Software";
@@ -413,24 +465,71 @@ public class SimpleInformesController : ControllerBase
                 worksheet.Cells[row + 1, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
                 worksheet.Cells[row + 1, 1].Style.Fill.BackgroundColor.SetColor(Color.LightBlue);
 
-                // Auto-fit columns
+                // Determine the row for the image (after footer)
+                int imageRow = row + 2;
+
+                // Auto-fit columns (needed to determine column widths for image positioning)
                 worksheet.Cells.AutoFitColumns();
 
+                // Set specific width for currency and total columns to avoid '########'
+                worksheet.Column(13).Width = 20;
+                worksheet.Column(14).Width = 25;
+                worksheet.Column(15).Width = 20;
+
                 // Add borders to all cells
-                var dataRange = worksheet.Cells[1, 1, row + 1, 15];
+                // The range needs to include the footer and potentially the image row now
+                var dataRange = worksheet.Cells[1, 1, imageRow, 15];
                 dataRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                 dataRange.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                 dataRange.Style.Border.Right.Style = ExcelBorderStyle.Thin;
                 dataRange.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
 
-                // Save the package
+                // Format currency column
+                worksheet.Cells[4, 13, row, 13].Style.Numberformat.Format = "#,##0.00";
+
+                // Save the package before adding drawings
                 package.Save();
             }
 
-            
+            // Construct the path to the image in the output directory
+            var imagePath = Path.Combine(_environment.ContentRootPath, "Assets", "Img", "william_dario_ruiz_ecity_2024.jpg");
+
+            // Ensure the image file exists and add it after re-opening the package
+            if (System.IO.File.Exists(imagePath))
+            {
+                // Re-open the package to add the image
+                using (var package = new ExcelPackage(new FileInfo(filePath)))
+                {
+                    var worksheet = package.Workbook.Worksheets["Informe"]; // Get the existing worksheet
+
+                    // Determine the row for the image again (as package was re-opened)
+                    // Find the last used row which contains the grand total
+                    int lastDataRow = worksheet.Dimension.End.Row - 1; // -1 to exclude the footer row below the grand total
+                    int imageRow = lastDataRow + 2; // Two rows after the grand total (one for footer, one blank)
+
+                    // Merge cells for the image to span the table width
+                    worksheet.Cells[imageRow, 1, imageRow, 15].Merge = true;
+
+                    // Add the image and position it within the merged cell range
+                    var logo = worksheet.Drawings.AddPicture("Logo", new FileInfo(imagePath));
+                    logo.SetPosition(imageRow - 1, 0, 0, 0); // Position at the determined imageRow, column 1, no pixel offsets (EPPlus is 0-indexed for SetPosition rows/cols)
+                    // Attempt to size the image to fit the merged cells. This might require manual adjustment.
+                    // A simple approach is to set a large width and let Excel handle fitting within the merged cells.
+                    logo.SetSize(1000, 200); // Example large width and a reasonable height in pixels, adjust as needed
+
+                    // Adjust row height for the image row
+                    worksheet.Row(imageRow).Height = 200; // Adjust height based on image size
+
+                    package.Save();
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Error: Image file not found at {imagePath}");
+            }
+
             await EnviarCorreoConExcel(filePath, fileName, fecha);
             
-       
             byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
@@ -451,7 +550,7 @@ public class SimpleInformesController : ControllerBase
             await _emailService.SendEmailAsync("wruiz@e-city.co", subject, body, filePath);
             
            
-           await _emailService.SendEmailAsync("contabilidad.inder@bello.gov.co", subject, body, filePath);
+            await _emailService.SendEmailAsync("contabilidad.inder@bello.gov.co", subject, body, filePath);
             await _emailService.SendEmailAsync("posventa@e-city.co", subject, body, filePath);
             await _emailService.SendEmailAsync("jdavidruiz333@gmail.com", subject, body, filePath);
         }
