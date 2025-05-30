@@ -26,7 +26,7 @@ public class EmailService
         _smtpPassword = _configuration["EmailSettings:Password"] ?? "";
         _fromEmail = _configuration["EmailSettings:FromEmail"] ?? "";
         _fromName = _configuration["EmailSettings:FromName"] ?? "API INDER Informes";
-        _defaultRecipient = _configuration["EmailSettings:DefaultRecipient"] ?? "wilyd2@hotmail.com";
+        _defaultRecipient = _configuration["EmailSettings:DefaultRecipient"] ?? "jdavidruiz333@gmail.com";
     }
 
     public async Task SendEmailAsync(string toEmail, string subject, string body, string attachmentPath = null)

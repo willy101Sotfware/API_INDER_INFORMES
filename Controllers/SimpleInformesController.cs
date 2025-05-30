@@ -345,32 +345,44 @@ public class SimpleInformesController : ControllerBase
             {
                 var worksheet = package.Workbook.Worksheets.Add("Informe");
 
-                
-                worksheet.Cells[1, 1].Value = "Nombres";
-                worksheet.Cells[1, 2].Value = "Apellidos";
-                worksheet.Cells[1, 3].Value = "Correo";
-                worksheet.Cells[1, 4].Value = "Dirección";
-                worksheet.Cells[1, 5].Value = "Fecha Nacimiento";
-                worksheet.Cells[1, 6].Value = "Tipo Documento";
-                worksheet.Cells[1, 7].Value = "Número Documento";
-                worksheet.Cells[1, 8].Value = "Género";
-                worksheet.Cells[1, 9].Value = "Celular";
-                worksheet.Cells[1, 10].Value = "ID Transacción";
-                worksheet.Cells[1, 11].Value = "Referencia";
-                worksheet.Cells[1, 12].Value = "Producto";
-                worksheet.Cells[1, 13].Value = "Monto";
-                worksheet.Cells[1, 14].Value = "Fecha Transacción";
-                worksheet.Cells[1, 15].Value = "Descripción Paypad";
+                // Add title
+                worksheet.Cells[1, 1].Value = "INFORME DIARIO TRANSACCIONES INDER";
+                worksheet.Cells[1, 1, 1, 15].Merge = true;
+                worksheet.Cells[1, 1].Style.Font.Bold = true;
+                worksheet.Cells[1, 1].Style.Font.Size = 16;
+                worksheet.Cells[1, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                worksheet.Cells[1, 1].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                worksheet.Cells[1, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                worksheet.Cells[1, 1].Style.Fill.BackgroundColor.SetColor(Color.LightBlue);
 
-             
-                var headerRange = worksheet.Cells[1, 1, 1, 15];
+                // Add header row
+                worksheet.Cells[2, 1].Value = "Nombres";
+                worksheet.Cells[2, 2].Value = "Apellidos";
+                worksheet.Cells[2, 3].Value = "Correo";
+                worksheet.Cells[2, 4].Value = "Dirección";
+                worksheet.Cells[2, 5].Value = "Fecha Nacimiento";
+                worksheet.Cells[2, 6].Value = "Tipo Documento";
+                worksheet.Cells[2, 7].Value = "Número Documento";
+                worksheet.Cells[2, 8].Value = "Género";
+                worksheet.Cells[2, 9].Value = "Celular";
+                worksheet.Cells[2, 10].Value = "ID Transacción";
+                worksheet.Cells[2, 11].Value = "Referencia";
+                worksheet.Cells[2, 12].Value = "Producto";
+                worksheet.Cells[2, 13].Value = "Monto";
+                worksheet.Cells[2, 14].Value = "Fecha Transacción";
+                worksheet.Cells[2, 15].Value = "Descripción Paypad";
+
+                // Style header row
+                var headerRange = worksheet.Cells[2, 1, 2, 15];
                 headerRange.Style.Font.Bold = true;
                 headerRange.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                headerRange.Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+                headerRange.Style.Fill.BackgroundColor.SetColor(Color.LightBlue);
                 headerRange.Style.Font.Color.SetColor(Color.Black);
+                headerRange.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                headerRange.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
 
-               
-                int row = 2;
+                // Add data rows
+                int row = 3;
                 foreach (dynamic item in resultado)
                 {
                     worksheet.Cells[row, 1].Value = item.DatosUsuario.Nombres;
@@ -391,10 +403,27 @@ public class SimpleInformesController : ControllerBase
                     row++;
                 }
 
-             
+                // Add footer
+                worksheet.Cells[row + 1, 1].Value = "Ecity-Software";
+                worksheet.Cells[row + 1, 1, row + 1, 15].Merge = true;
+                worksheet.Cells[row + 1, 1].Style.Font.Bold = true;
+                worksheet.Cells[row + 1, 1].Style.Font.Size = 12;
+                worksheet.Cells[row + 1, 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                worksheet.Cells[row + 1, 1].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+                worksheet.Cells[row + 1, 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                worksheet.Cells[row + 1, 1].Style.Fill.BackgroundColor.SetColor(Color.LightBlue);
+
+                // Auto-fit columns
                 worksheet.Cells.AutoFitColumns();
 
-               
+                // Add borders to all cells
+                var dataRange = worksheet.Cells[1, 1, row + 1, 15];
+                dataRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                dataRange.Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                dataRange.Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                dataRange.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+
+                // Save the package
                 package.Save();
             }
 
@@ -422,7 +451,7 @@ public class SimpleInformesController : ControllerBase
             await _emailService.SendEmailAsync("wruiz@e-city.co", subject, body, filePath);
             
            
-            await _emailService.SendEmailAsync("contabilidad.inder@bello.gov.co", subject, body, filePath);
+           await _emailService.SendEmailAsync("contabilidad.inder@bello.gov.co", subject, body, filePath);
             await _emailService.SendEmailAsync("posventa@e-city.co", subject, body, filePath);
             await _emailService.SendEmailAsync("jdavidruiz333@gmail.com", subject, body, filePath);
         }
