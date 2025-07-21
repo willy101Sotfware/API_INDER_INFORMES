@@ -34,15 +34,14 @@ public class SimpleInformesController : ControllerBase
     {
         try
         {
-            // 1. Obtener transacciones de la fecha especificada con estado Aprobada
-
-            var estadoAprobada = await _dashboardContext.StateTransactions
-                .FirstOrDefaultAsync(s => s.STATE == "Aprobada");
-
-            int idEstadoAprobada = estadoAprobada?.ID ?? 0;
-
+            // 1. Obtener transacciones de la fecha especificada con estado Aprobada o Aprobada Error Devuelta
             var transacciones = await _dashboardContext.Transactions
-             .Where(t => t.DATE_CREATED.Date == fecha.Date && t.ID_STATE_TRANSACTION == idEstadoAprobada && t.ID_PAYPAD != 1) // Excluir IdPaypad = 1 (datos de prueba)
+                .Where(t => t.DATE_CREATED.Date == fecha.Date && 
+                          t.ID_PAYPAD != 1 &&
+                          _dashboardContext.StateTransactions
+                              .Where(s => s.STATE == "Aprobada" || s.STATE == "Aprobada Error Devuelta")
+                              .Select(s => s.ID)
+                              .Contains(t.ID_STATE_TRANSACTION ?? 0)) // Excluir IdPaypad = 1 (datos de prueba)
              .Join(
                  _dashboardContext.PayPads,
                  t => t.ID_PAYPAD,
@@ -189,31 +188,34 @@ public class SimpleInformesController : ControllerBase
     {
         try
         {
-            // 1. Obtener transacciones de la fecha especificada con estado Aprobada
-
-            var estadoAprobada = await _dashboardContext.StateTransactions
-                .FirstOrDefaultAsync(s => s.STATE == "Aprobada");
-
-            int idEstadoAprobada = estadoAprobada?.ID ?? 0;
-
+            // 1. Obtener transacciones de la fecha especificada con estado Aprobada o Aprobada Error Devuelta
             var transacciones = await _dashboardContext.Transactions
-               .Where(t => t.DATE_CREATED.Date == fecha.Date && t.ID_STATE_TRANSACTION == idEstadoAprobada && t.ID_PAYPAD != 1) // Excluir IdPaypad = 1 (datos de prueba)
-               .Join(
-                   _dashboardContext.PayPads,
-                   t => t.ID_PAYPAD,
-                   p => p.ID,
-                   (t, p) => new
-                   {
-                       ID = t.ID,
-                       NumeroDocumento = t.DOCUMENT,
-                       Referencia = t.REFERENCE,
-                       Producto = t.PRODUCT,
-                       Monto = t.TOTAL_AMOUNT,
-                       IdPaypad = t.ID_PAYPAD,
-                       IdEstado = t.ID_STATE_TRANSACTION,
-                       Descripcion = p.DESCRIPTION,
-                       FechaTransaccion = t.DATE_CREATED
-                   })
+                .Where(t => t.DATE_CREATED.Date == fecha.Date && 
+                          t.ID_PAYPAD != 1 &&
+                          _dashboardContext.StateTransactions
+                              .Where(s => s.STATE == "Aprobada" || s.STATE == "Aprobada Error Devuelta")
+                              .Select(s => s.ID)
+                              .Contains(t.ID_STATE_TRANSACTION ?? 0))
+                .Join(
+                    _dashboardContext.PayPads,
+                    t => t.ID_PAYPAD,
+                    p => p.ID,
+                    (t, p) => new
+                    {
+                        t.ID,
+                        NumeroDocumento = t.DOCUMENT,
+                        Referencia = t.REFERENCE,
+                        Producto = t.PRODUCT,
+                        Monto = t.TOTAL_AMOUNT,
+                        IdPaypad = t.ID_PAYPAD,
+                        IdEstado = t.ID_STATE_TRANSACTION,
+                        Estado = _dashboardContext.StateTransactions
+                                        .Where(s => s.ID == t.ID_STATE_TRANSACTION)
+                                        .Select(s => s.STATE)
+                                        .FirstOrDefault() ?? "Desconocido",
+                        Descripcion = p.DESCRIPTION,
+                        FechaTransaccion = t.DATE_CREATED
+                    })
                 .ToListAsync();
 
             // 2. Obtener todos los usuarios de INDER para buscar coincidencias
@@ -311,6 +313,7 @@ public class SimpleInformesController : ControllerBase
                             transaccion.Monto,
                             transaccion.IdPaypad,
                             transaccion.IdEstado,
+                            transaccion.Estado,
                             transaccion.Descripcion,
                             transaccion.FechaTransaccion,
                             DatosUsuario = datosUsuarioEncontrado,
@@ -370,10 +373,11 @@ public class SimpleInformesController : ControllerBase
                 worksheet.Cells[3, 12].Value = "Producto";
                 worksheet.Cells[3, 13].Value = "Monto";
                 worksheet.Cells[3, 14].Value = "Fecha Transacción";
-                worksheet.Cells[3, 15].Value = "Descripción Paypad";
+                worksheet.Cells[3, 15].Value = "Estado";
+                worksheet.Cells[3, 16].Value = "Descripción Paypad";
 
                 // Style header row
-                var headerRange = worksheet.Cells[3, 1, 3, 15];
+                var headerRange = worksheet.Cells[3, 1, 3, 16];
                 headerRange.Style.Font.Bold = true;
                 headerRange.Style.Font.Size = 12;
                 headerRange.Style.Fill.PatternType = ExcelFillStyle.Solid;
@@ -422,7 +426,8 @@ public class SimpleInformesController : ControllerBase
                         worksheet.Cells[row, 12].Value = item.Producto;
                         worksheet.Cells[row, 13].Value = item.Monto;
                         worksheet.Cells[row, 14].Value = item.FechaTransaccion.ToString("dd/MM/yyyy HH:mm:ss");
-                        worksheet.Cells[row, 15].Value = item.DescripcionPaypad;
+                        worksheet.Cells[row, 15].Value = item.Estado ?? "Desconocido";
+                        worksheet.Cells[row, 16].Value = item.DescripcionPaypad;
 
                         subtotalGrupo += item.Monto ?? 0;
                         transaccionesGrupo++;
@@ -474,11 +479,12 @@ public class SimpleInformesController : ControllerBase
                 // Set specific width for currency and total columns to avoid '########'
                 worksheet.Column(13).Width = 20;
                 worksheet.Column(14).Width = 25;
-                worksheet.Column(15).Width = 20;
+                worksheet.Column(15).Width = 15; // Estado
+                worksheet.Column(16).Width = 20;
 
                 // Add borders to all cells
                 // The range needs to include the footer and potentially the image row now
-                var dataRange = worksheet.Cells[1, 1, imageRow, 15];
+                var dataRange = worksheet.Cells[1, 1, imageRow, 16];
                 dataRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                 dataRange.Style.Border.Left.Style = ExcelBorderStyle.Thin;
                 dataRange.Style.Border.Right.Style = ExcelBorderStyle.Thin;
