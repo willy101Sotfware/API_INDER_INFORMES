@@ -35,12 +35,12 @@ public class SimpleInformesController : ControllerBase
         try
         {
             // 1. Obtener transacciones de la fecha especificada con estado Aprobada
-    
+
             var estadoAprobada = await _dashboardContext.StateTransactions
                 .FirstOrDefaultAsync(s => s.STATE == "Aprobada");
-            
+
             int idEstadoAprobada = estadoAprobada?.ID ?? 0;
-            
+
             var transacciones = await _dashboardContext.Transactions
              .Where(t => t.DATE_CREATED.Date == fecha.Date && t.ID_STATE_TRANSACTION == idEstadoAprobada && t.ID_PAYPAD != 1) // Excluir IdPaypad = 1 (datos de prueba)
              .Join(
@@ -85,7 +85,7 @@ public class SimpleInformesController : ControllerBase
             {
                 if (!string.IsNullOrEmpty(usuario.NumeroDocumento))
                 {
-                  
+
                     var docNormalizado = usuario.NumeroDocumento.Replace(" ", "").Replace(".", "").Replace("-", "");
                     usuariosPorDocumento[docNormalizado] = usuario;
                 }
@@ -95,44 +95,44 @@ public class SimpleInformesController : ControllerBase
             var resultado = new List<object>();
             foreach (var transaccion in transacciones)
             {
-                
-            object infoTransaccion;
-            
-      
-            var datosUsuarioDefault = new
-            {
-                Nombres = "Sin registro",
-                Apellidos = "Sin registro",
-                Correo = "Sin registro",
-                Direccion = "Sin registro",
-                FechaNacimiento = "Sin registro",
-                TipoDocumento = "Sin registro",
-                Genero = "Sin registro",
-                Celular = "Sin registro",
-                UsuarioEncontrado = false
-            };
-            
-            infoTransaccion = new
-            {
-                transaccion.ID,
-                transaccion.NumeroDocumento,
-                transaccion.Referencia,
-                transaccion.Producto,
-                transaccion.Monto,
-                transaccion.IdPaypad,
-                transaccion.IdEstado,
-                transaccion.Descripcion,
-                transaccion.FechaTransaccion,
-                DatosUsuario = datosUsuarioDefault
-            };
 
-          
+                object infoTransaccion;
+
+
+                var datosUsuarioDefault = new
+                {
+                    Nombres = "Sin registro",
+                    Apellidos = "Sin registro",
+                    Correo = "Sin registro",
+                    Direccion = "Sin registro",
+                    FechaNacimiento = "Sin registro",
+                    TipoDocumento = "Sin registro",
+                    Genero = "Sin registro",
+                    Celular = "Sin registro",
+                    UsuarioEncontrado = false
+                };
+
+                infoTransaccion = new
+                {
+                    transaccion.ID,
+                    transaccion.NumeroDocumento,
+                    transaccion.Referencia,
+                    transaccion.Producto,
+                    transaccion.Monto,
+                    transaccion.IdPaypad,
+                    transaccion.IdEstado,
+                    transaccion.Descripcion,
+                    transaccion.FechaTransaccion,
+                    DatosUsuario = datosUsuarioDefault
+                };
+
+
                 if (!string.IsNullOrEmpty(transaccion.NumeroDocumento))
                 {
                     var docNormalizado = transaccion.NumeroDocumento.Replace(" ", "").Replace(".", "").Replace("-", "");
                     if (usuariosPorDocumento.TryGetValue(docNormalizado, out var usuario))
                     {
-                
+
                         var datosUsuarioEncontrado = new
                         {
                             Nombres = usuario.Nombres ?? "Sin registro",
@@ -145,9 +145,9 @@ public class SimpleInformesController : ControllerBase
                             Celular = usuario.Celular ?? "Sin registro",
                             UsuarioEncontrado = true
                         };
-                        
-                      
-                      infoTransaccion = new
+
+
+                        infoTransaccion = new
                         {
                             transaccion.ID,
                             transaccion.NumeroDocumento,
@@ -163,8 +163,8 @@ public class SimpleInformesController : ControllerBase
                     }
                 }
 
-        
-                if (!string.IsNullOrEmpty(transaccion.NumeroDocumento) && 
+
+                if (!string.IsNullOrEmpty(transaccion.NumeroDocumento) &&
                     ((dynamic)infoTransaccion).DatosUsuario.UsuarioEncontrado)
                 {
                     resultado.Add(infoTransaccion);
@@ -190,12 +190,12 @@ public class SimpleInformesController : ControllerBase
         try
         {
             // 1. Obtener transacciones de la fecha especificada con estado Aprobada
-        
+
             var estadoAprobada = await _dashboardContext.StateTransactions
                 .FirstOrDefaultAsync(s => s.STATE == "Aprobada");
-            
+
             int idEstadoAprobada = estadoAprobada?.ID ?? 0;
-            
+
             var transacciones = await _dashboardContext.Transactions
                .Where(t => t.DATE_CREATED.Date == fecha.Date && t.ID_STATE_TRANSACTION == idEstadoAprobada && t.ID_PAYPAD != 1) // Excluir IdPaypad = 1 (datos de prueba)
                .Join(
@@ -240,7 +240,7 @@ public class SimpleInformesController : ControllerBase
             {
                 if (!string.IsNullOrEmpty(usuario.NumeroDocumento))
                 {
-                   
+
                     var docNormalizado = usuario.NumeroDocumento.Replace(" ", "").Replace(".", "").Replace("-", "");
                     usuariosPorDocumento[docNormalizado] = usuario;
                 }
@@ -250,10 +250,10 @@ public class SimpleInformesController : ControllerBase
             var resultado = new List<object>();
             foreach (var transaccion in transacciones)
             {
-              
+
                 object infoTransaccion;
-            
-              
+
+
                 var datosUsuarioDefault = new
                 {
                     Nombres = "Sin registro",
@@ -266,7 +266,7 @@ public class SimpleInformesController : ControllerBase
                     Celular = "Sin registro",
                     UsuarioEncontrado = false
                 };
-            
+
                 infoTransaccion = new
                 {
                     transaccion.ID,
@@ -281,13 +281,13 @@ public class SimpleInformesController : ControllerBase
                     DatosUsuario = datosUsuarioDefault
                 };
 
-              
+
                 if (!string.IsNullOrEmpty(transaccion.NumeroDocumento))
                 {
                     var docNormalizado = transaccion.NumeroDocumento.Replace(" ", "").Replace(".", "").Replace("-", "");
                     if (usuariosPorDocumento.TryGetValue(docNormalizado, out var usuario))
                     {
-                        
+
                         var datosUsuarioEncontrado = new
                         {
                             Nombres = usuario.Nombres ?? "Sin registro",
@@ -300,8 +300,8 @@ public class SimpleInformesController : ControllerBase
                             Celular = usuario.Celular ?? "Sin registro",
                             UsuarioEncontrado = true
                         };
-                        
-               
+
+
                         infoTransaccion = new
                         {
                             transaccion.ID,
@@ -319,8 +319,8 @@ public class SimpleInformesController : ControllerBase
                     }
                 }
 
-               
-                if (!string.IsNullOrEmpty(transaccion.NumeroDocumento) && 
+
+                if (!string.IsNullOrEmpty(transaccion.NumeroDocumento) &&
                     ((dynamic)infoTransaccion).DatosUsuario.UsuarioEncontrado)
                 {
                     resultado.Add(infoTransaccion);
@@ -331,16 +331,16 @@ public class SimpleInformesController : ControllerBase
             var fileName = $"Informe_Transacciones_{fecha:yyyy-MM-dd}.xlsx";
             var filePath = Path.Combine(_environment.ContentRootPath, "Informes", fileName);
 
-            
+
             Directory.CreateDirectory(Path.Combine(_environment.ContentRootPath, "Informes"));
-            
-           
+
+
             if (System.IO.File.Exists(filePath))
             {
                 System.IO.File.Delete(filePath);
             }
 
-          
+
             using (var package = new ExcelPackage(new FileInfo(filePath)))
             {
                 var worksheet = package.Workbook.Worksheets.Add("Informe");
@@ -529,7 +529,7 @@ public class SimpleInformesController : ControllerBase
             }
 
             await EnviarCorreoConExcel(filePath, fileName, fecha);
-            
+
             byte[] fileBytes = System.IO.File.ReadAllBytes(filePath);
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
         }
@@ -539,24 +539,25 @@ public class SimpleInformesController : ControllerBase
         }
     }
 
-    private async Task EnviarCorreoConExcel(string filePath, string fileName, DateTime fecha)
+   private async Task EnviarCorreoConExcel(string filePath, string fileName, DateTime fecha)
     {
         try
         {
             string subject = $"Informe de Transacciones INDER - {fecha:yyyy-MM-dd}";
             string body = $"<html><body><p>Adjunto encontrará el informe de transacciones del {fecha:dd/MM/yyyy}.</p><p>Este es un correo automático, por favor no responda a este mensaje.</p></body></html>";
-            
-           
+
+
             await _emailService.SendEmailAsync("wruiz@e-city.co", subject, body, filePath);
-            
-           
+
+
             await _emailService.SendEmailAsync("contabilidad.inder@bello.gov.co", subject, body, filePath);
             await _emailService.SendEmailAsync("posventa@e-city.co", subject, body, filePath);
             await _emailService.SendEmailAsync("jdavidruiz333@gmail.com", subject, body, filePath);
+            await _emailService.SendEmailAsync("correofacturacioninderbello@gmail.com", subject, body, filePath);
         }
         catch (Exception ex)
         {
-            
+
             Console.WriteLine($"Error al enviar correo: {ex.Message}");
         }
     }
