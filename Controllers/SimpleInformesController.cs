@@ -545,26 +545,68 @@ public class SimpleInformesController : ControllerBase
         }
     }
 
-   private async Task EnviarCorreoConExcel(string filePath, string fileName, DateTime fecha)
+    private async Task EnviarCorreoConExcel(string filePath, string fileName, DateTime fecha)
     {
         try
         {
             string subject = $"Informe de Transacciones INDER - {fecha:yyyy-MM-dd}";
-            string body = $"<html><body><p>Adjunto encontrará el informe de transacciones del {fecha:dd/MM/yyyy}.</p><p>Este es un correo automático, por favor no responda a este mensaje.</p></body></html>";
+            string body = $"<html><body><p>Adjunto encontrarÃ¡ el informe de transacciones del {fecha:dd/MM/yyyy}.</p><p>Este es un correo automÃ¡tico, por favor no responda a este mensaje.</p></body></html>";
 
+            // Lista de correos a los que se enviara el informe
+            var correos = new List<string>
+            {
+                "wruiz@e-city.co",
+                "contabilidad.inder@bello.gov.co",
+                "posventa@e-city.co",
+                "jdavidruiz333@gmail.com",
+                "facturacioninderbello@gmail.com"
+            };
 
-            await _emailService.SendEmailAsync("wruiz@e-city.co", subject, body, filePath);
+            // Verificar si el archivo existe
+            if (!System.IO.File.Exists(filePath))
+            {
+                Console.WriteLine($"Error: El archivo {filePath} no existe.");
+                return;
+            }
 
+            // Tamaño maximo del archivo adjunto (25MB en bytes)
+            long maxFileSize = 25 * 1024 * 1024;
+            FileInfo fileInfo = new FileInfo(filePath);
+            
+            if (fileInfo.Length > maxFileSize)
+            {
+                Console.WriteLine($"Advertencia: El archivo {filePath} es demasiado grande ({fileInfo.Length / (1024 * 1024)}MB).");
+                //aca podemos  implementar logica para comprimir el archivo o dividirlo
+            }
 
-            await _emailService.SendEmailAsync("contabilidad.inder@bello.gov.co", subject, body, filePath);
-            await _emailService.SendEmailAsync("posventa@e-city.co", subject, body, filePath);
-            await _emailService.SendEmailAsync("jdavidruiz333@gmail.com", subject, body, filePath);
-            await _emailService.SendEmailAsync("correofacturacioninderbello@gmail.com", subject, body, filePath);
+            // Enviar correos de forma individual para mejor manejo de errores
+            foreach (var correo in correos)
+            {
+                try
+                {
+                    Console.WriteLine($"Enviando correo a: {correo}");
+                    await _emailService.SendEmailAsync(correo, subject, body, filePath);
+                    Console.WriteLine($"Correo enviado exitosamente a: {correo}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error al enviar correo a {correo}: {ex.Message}");
+                    
+                    // Si el error es especifico de Gmail, podriasmos intentar un formato alternativo
+                    if (ex.Message.Contains("gmail.com") && ex.Message.Contains("does not exist"))
+                    {
+                        Console.WriteLine("Posible error con la direcciÃ³n de Gmail. Verifica que estÃ© escrita correctamente.");
+                    }
+                }
+                
+                //pequeña pausa entre correos para evitar sobrecargar el servidor
+                await Task.Delay(1000);
+            }
         }
         catch (Exception ex)
         {
-
-            Console.WriteLine($"Error al enviar correo: {ex.Message}");
+            Console.WriteLine($"Error general al enviar correos: {ex.Message}");
+            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
         }
     }
 }
