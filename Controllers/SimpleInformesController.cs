@@ -552,7 +552,7 @@ public class SimpleInformesController : ControllerBase
             string subject = $"Informe de Transacciones INDER - {fecha:yyyy-MM-dd}";
             string body = $"<html><body><p>Adjunto encontrarÃ¡ el informe de transacciones del {fecha:dd/MM/yyyy}.</p><p>Este es un correo automÃ¡tico, por favor no responda a este mensaje.</p></body></html>";
 
-            // Lista de correos a los que se enviara el informe
+       
             var correos = new List<string>
             {
                 "wruiz@e-city.co",
@@ -562,24 +562,24 @@ public class SimpleInformesController : ControllerBase
                 "facturacioninderbello@gmail.com"
             };
 
-            // Verificar si el archivo existe
+    
             if (!System.IO.File.Exists(filePath))
             {
                 Console.WriteLine($"Error: El archivo {filePath} no existe.");
                 return;
             }
 
-            // Tamaño maximo del archivo adjunto (25MB en bytes)
+  
             long maxFileSize = 25 * 1024 * 1024;
             FileInfo fileInfo = new FileInfo(filePath);
             
             if (fileInfo.Length > maxFileSize)
             {
                 Console.WriteLine($"Advertencia: El archivo {filePath} es demasiado grande ({fileInfo.Length / (1024 * 1024)}MB).");
-                //aca podemos  implementar logica para comprimir el archivo o dividirlo
+               
             }
 
-            // Enviar correos de forma individual para mejor manejo de errores
+
             foreach (var correo in correos)
             {
                 try
@@ -592,14 +592,14 @@ public class SimpleInformesController : ControllerBase
                 {
                     Console.WriteLine($"Error al enviar correo a {correo}: {ex.Message}");
                     
-                    // Si el error es especifico de Gmail, podriasmos intentar un formato alternativo
+                 
                     if (ex.Message.Contains("gmail.com") && ex.Message.Contains("does not exist"))
                     {
                         Console.WriteLine("Posible error con la direcciÃ³n de Gmail. Verifica que estÃ© escrita correctamente.");
                     }
                 }
                 
-                //pequeña pausa entre correos para evitar sobrecargar el servidor
+              
                 await Task.Delay(1000);
             }
         }
