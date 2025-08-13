@@ -37,11 +37,11 @@ public class SimpleInformesController : ControllerBase
             // 1. Obtener transacciones de la fecha especificada con estado Aprobada o Aprobada Error Devuelta
             var transacciones = await _dashboardContext.Transactions
                 .Where(t => t.DATE_CREATED.Date == fecha.Date && 
-                          t.ID_PAYPAD != 1 &&
+                          (t.ID_PAYPAD == 70 || t.ID_PAYPAD == 71 || t.ID_PAYPAD == 72) &&
                           _dashboardContext.StateTransactions
                               .Where(s => s.STATE == "Aprobada" || s.STATE == "Aprobada Error Devuelta")
                               .Select(s => s.ID)
-                              .Contains(t.ID_STATE_TRANSACTION ?? 0)) // Excluir IdPaypad = 1 (datos de prueba)
+                              .Contains(t.ID_STATE_TRANSACTION ?? 0)) // Solo incluir paypads del INDER (70, 71, 72)
              .Join(
                  _dashboardContext.PayPads,
                  t => t.ID_PAYPAD,
@@ -191,11 +191,11 @@ public class SimpleInformesController : ControllerBase
             // 1. Obtener transacciones de la fecha especificada con estado Aprobada o Aprobada Error Devuelta
             var transacciones = await _dashboardContext.Transactions
                 .Where(t => t.DATE_CREATED.Date == fecha.Date && 
-                          t.ID_PAYPAD != 1 &&
+                          (t.ID_PAYPAD == 70 || t.ID_PAYPAD == 71 || t.ID_PAYPAD == 72) &&
                           _dashboardContext.StateTransactions
                               .Where(s => s.STATE == "Aprobada" || s.STATE == "Aprobada Error Devuelta")
                               .Select(s => s.ID)
-                              .Contains(t.ID_STATE_TRANSACTION ?? 0))
+                              .Contains(t.ID_STATE_TRANSACTION ?? 0)) // Solo incluir paypads del INDER (70, 71, 72)
                 .Join(
                     _dashboardContext.PayPads,
                     t => t.ID_PAYPAD,
