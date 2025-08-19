@@ -36,12 +36,12 @@ public class SimpleInformesController : ControllerBase
         {
             // 1. Obtener transacciones de la fecha especificada con estado Aprobada o Aprobada Error Devuelta
             var transacciones = await _dashboardContext.Transactions
-                .Where(t => t.DATE_CREATED.Date == fecha.Date && 
+                .Where(t => t.DATE_CREATED.Date == fecha.Date &&
                           (t.ID_PAYPAD == 70 || t.ID_PAYPAD == 71 || t.ID_PAYPAD == 72) &&
                           _dashboardContext.StateTransactions
                               .Where(s => s.STATE == "Aprobada" || s.STATE == "Aprobada Error Devuelta")
                               .Select(s => s.ID)
-                              .Contains(t.ID_STATE_TRANSACTION ?? 0)) // Solo incluir paypads del INDER (70, 71, 72)
+                              .Contains(t.ID_STATE_TRANSACTION ?? 0))
              .Join(
                  _dashboardContext.PayPads,
                  t => t.ID_PAYPAD,
@@ -190,12 +190,12 @@ public class SimpleInformesController : ControllerBase
         {
             // 1. Obtener transacciones de la fecha especificada con estado Aprobada o Aprobada Error Devuelta
             var transacciones = await _dashboardContext.Transactions
-                .Where(t => t.DATE_CREATED.Date == fecha.Date && 
+                .Where(t => t.DATE_CREATED.Date == fecha.Date &&
                           (t.ID_PAYPAD == 70 || t.ID_PAYPAD == 71 || t.ID_PAYPAD == 72) &&
                           _dashboardContext.StateTransactions
                               .Where(s => s.STATE == "Aprobada" || s.STATE == "Aprobada Error Devuelta")
                               .Select(s => s.ID)
-                              .Contains(t.ID_STATE_TRANSACTION ?? 0)) // Solo incluir paypads del INDER (70, 71, 72)
+                              .Contains(t.ID_STATE_TRANSACTION ?? 0))
                 .Join(
                     _dashboardContext.PayPads,
                     t => t.ID_PAYPAD,
@@ -552,7 +552,7 @@ public class SimpleInformesController : ControllerBase
             string subject = $"Informe de Transacciones INDER - {fecha:yyyy-MM-dd}";
             string body = $"<html><body><p>Adjunto encontrarÃ¡ el informe de transacciones del {fecha:dd/MM/yyyy}.</p><p>Este es un correo automÃ¡tico, por favor no responda a este mensaje.</p></body></html>";
 
-       
+
             var correos = new List<string>
             {
                 "wruiz@e-city.co",
@@ -562,21 +562,21 @@ public class SimpleInformesController : ControllerBase
                 "facturacioninderbello@gmail.com"
             };
 
-    
+
             if (!System.IO.File.Exists(filePath))
             {
                 Console.WriteLine($"Error: El archivo {filePath} no existe.");
                 return;
             }
 
-  
+
             long maxFileSize = 25 * 1024 * 1024;
             FileInfo fileInfo = new FileInfo(filePath);
-            
+
             if (fileInfo.Length > maxFileSize)
             {
                 Console.WriteLine($"Advertencia: El archivo {filePath} es demasiado grande ({fileInfo.Length / (1024 * 1024)}MB).");
-               
+
             }
 
 
@@ -591,15 +591,15 @@ public class SimpleInformesController : ControllerBase
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error al enviar correo a {correo}: {ex.Message}");
-                    
-                 
+
+
                     if (ex.Message.Contains("gmail.com") && ex.Message.Contains("does not exist"))
                     {
                         Console.WriteLine("Posible error con la direcciÃ³n de Gmail. Verifica que estÃ© escrita correctamente.");
                     }
                 }
-                
-              
+
+
                 await Task.Delay(1000);
             }
         }
